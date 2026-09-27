@@ -1,0 +1,66 @@
+name: Build native Magic Keyboard helper
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build ARM64 helper
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+
+          xcrun clang \
+            -arch arm64 \
+            -mmacosx-version-min=15.0 \
+            -std=c11 -Os -Wall -Wextra -Werror -fblocks \
+            src/main.c \
+            -framework CoreFoundation \
+            -framework IOKit \
+            -o dist/magic-keyboard-keymap
+
+          codesign --force --sign - --timestamp=none dist/magic-keyboard-keymap
+
+      - name: Verify binary
+        run: |
+          set -euo pipefail
+          file dist/magic-keyboard-keymap | tee dist/BUILD-INFO.txt
+          lipo -archs dist/magic-keyboard-keymap | tee -a dist/BUILD-INFO.txt
+          otool -L dist/magic-keyboard-keymap | tee -a dist/BUILD-INFO.txt
+          codesign -dv --verbose=4 dist/magic-keyboard-keymap 2>&1 | tee -a dist/BUILD-INFO.txt
+          codesign --verify --strict --verbose=2 dist/magic-keyboard-keymap
+
+          test "$(lipo -archs dist/magic-keyboard-keymap)" = "arm64"
+
+      - name: Validate launchd plist
+        run: |
+          plutil -lint launchd/com.landco.magic-keyboard-keymap.plist
+
+      - name: Prepare install package
+        run: |
+          set -euo pipefail
+          cp launchd/com.landco.magic-keyboard-keymap.plist dist/
+          cp install.sh uninstall.sh dist/
+          chmod +x dist/install.sh dist/uninstall.sh
+          (
+            cd dist
+            shasum -a 256 magic-keyboard-keymap \
+              com.landco.magic-keyboard-keymap.plist \
+              install.sh uninstall.sh > SHA256SUMS.txt
+          )
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MagicKeyboard-Launchpad-Native-arm64
+          path: dist/
+          retention-days: 30
