@@ -26,24 +26,21 @@ Native event-driven remap for the user's external Apple Magic Keyboard on macOS 
 - 5-second fail-safe timeout prevents it remaining resident if event delivery fails
 
 ## Safety
-The helper does not write firmware or persistent keyboard hardware state. It changes only the in-memory `UserKeyMapping` property of the matching HID service. macOS itself documents that these mappings disappear when the keyboard service is removed or the system restarts.
+The helper does not write firmware or persistent keyboard hardware state. It changes only the in-memory `UserKeyMapping` property of the matching HID service.
 
-Before changing anything, the executable independently verifies the full Magic Keyboard identity again. It also preserves all unrelated existing `UserKeyMapping` entries and replaces/removes only the Search/F4 source entry.
+Before changing anything, the executable independently verifies the full Magic Keyboard identity again. It preserves all unrelated existing `UserKeyMapping` entries and replaces/removes only the Search/F4 source entry.
 
-`uninstall.sh` removes only this mapping and leaves unrelated remaps untouched.
+## Easy install
+Unpack the release ZIP and double-click:
 
-## Install
-Download the Actions artifact, unzip it, then:
+- `1-INSTALL.command` — install
+- `2-CHECK.command` — verify installation/status
+- `3-UNINSTALL.command` — remove
 
-```bash
-./install.sh
-```
+The terminal scripts pause at the end so the result remains visible.
 
-Files are installed to:
+Permanent files:
 - `~/bin/magic-keyboard-keymap`
 - `~/Library/LaunchAgents/com.landco.magic-keyboard-keymap.plist`
 
-## Uninstall
-```bash
-./uninstall.sh
-```
+No Homebrew, Xcode, CLT, Python, third-party libraries, polling, or permanent resident helper process are required.
