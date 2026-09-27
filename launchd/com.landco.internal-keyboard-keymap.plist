@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.landco.internal-keyboard-keymap</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/m1/bin/internal-keyboard-keymap</string>
+    </array>
+
+    <key>ProcessType</key>
+    <string>Background</string>
+
+    <key>LaunchEvents</key>
+    <dict>
+        <key>com.apple.iokit.matching</key>
+        <dict>
+            <key>Internal Keyboard attached</key>
+            <dict>
+                <key>IOProviderClass</key>
+                <string>AppleHIDKeyboardEventDriverV2</string>
+                <key>IOPropertyMatch</key>
+                <dict>
+                    <key>VendorID</key>
+                    <integer>1452</integer>
+                    <key>ProductID</key>
+                    <integer>641</integer>
+                    <key>Transport</key>
+                    <string>SPI</string>
+                    <key>PrimaryUsagePage</key>
+                    <integer>1</integer>
+                    <key>PrimaryUsage</key>
+                    <integer>6</integer>
+                    <key>Product</key>
+                    <string>Apple Internal Keyboard / Trackpad</string>
+                </dict>
+                <key>IOMatchLaunchStream</key>
+                <true/>
+            </dict>
+        </dict>
+    </dict>
+</dict>
+</plist>
