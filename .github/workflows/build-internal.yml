@@ -1,0 +1,113 @@
+name: Build native Internal Keyboard helper
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/internal_main.c'
+      - 'launchd/com.landco.internal-keyboard-keymap.plist'
+      - 'install-internal.sh'
+      - 'uninstall-internal.sh'
+      - '1-INSTALL-INTERNAL.command'
+      - '2-CHECK-INTERNAL.command'
+      - '3-UNINSTALL-INTERNAL.command'
+      - 'README_INTERNAL_RU.txt'
+      - '.github/workflows/build-internal.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build ARM64 helper
+        run: |
+          set -euo pipefail
+          mkdir -p build
+
+          xcrun clang \
+            -arch arm64 \
+            -mmacosx-version-min=15.0 \
+            -std=c11 -Os -Wall -Wextra -Werror -fblocks \
+            src/internal_main.c \
+            -framework CoreFoundation \
+            -framework IOKit \
+            -o build/internal-keyboard-keymap
+
+          codesign --force --sign - --timestamp=none build/internal-keyboard-keymap
+
+      - name: Verify binary
+        run: |
+          set -euo pipefail
+          file build/internal-keyboard-keymap | tee build/BUILD-INFO.txt
+          lipo -archs build/internal-keyboard-keymap | tee -a build/BUILD-INFO.txt
+          otool -L build/internal-keyboard-keymap | tee -a build/BUILD-INFO.txt
+          codesign -dv --verbose=4 build/internal-keyboard-keymap 2>&1 | tee -a build/BUILD-INFO.txt
+          codesign --verify --strict --verbose=2 build/internal-keyboard-keymap
+          test "$(lipo -archs build/internal-keyboard-keymap)" = "arm64"
+
+      - name: Validate launchd plist
+        run: |
+          plutil -lint launchd/com.landco.internal-keyboard-keymap.plist
+
+      - name: Prepare user package
+        run: |
+          set -euo pipefail
+
+          PKG="InternalKeyboard-Launchpad-F18-Native-arm64"
+          mkdir -p "$PKG"
+
+          cp build/internal-keyboard-keymap "$PKG/"
+          cp launchd/com.landco.internal-keyboard-keymap.plist "$PKG/"
+          cp install-internal.sh uninstall-internal.sh "$PKG/"
+          cp 1-INSTALL-INTERNAL.command 2-CHECK-INTERNAL.command 3-UNINSTALL-INTERNAL.command "$PKG/"
+          cp README_INTERNAL_RU.txt "$PKG/"
+          cp build/BUILD-INFO.txt "$PKG/"
+
+          chmod 755 \
+            "$PKG/internal-keyboard-keymap" \
+            "$PKG/install-internal.sh" \
+            "$PKG/uninstall-internal.sh" \
+            "$PKG/1-INSTALL-INTERNAL.command" \
+            "$PKG/2-CHECK-INTERNAL.command" \
+            "$PKG/3-UNINSTALL-INTERNAL.command"
+
+          (
+            cd "$PKG"
+            shasum -a 256 \
+              internal-keyboard-keymap \
+              com.landco.internal-keyboard-keymap.plist \
+              install-internal.sh uninstall-internal.sh \
+              1-INSTALL-INTERNAL.command 2-CHECK-INTERNAL.command 3-UNINSTALL-INTERNAL.command \
+              README_INTERNAL_RU.txt BUILD-INFO.txt > SHA256SUMS.txt
+          )
+
+          /usr/bin/ditto -c -k --sequesterRsrc --keepParent \
+            "$PKG" \
+            "InternalKeyboard-Launchpad-F18-Native-arm64.zip"
+
+      - name: Verify final ZIP
+        run: |
+          set -euo pipefail
+          TMP="$(mktemp -d)"
+          trap 'rm -rf "$TMP"' EXIT
+          /usr/bin/ditto -x -k InternalKeyboard-Launchpad-F18-Native-arm64.zip "$TMP"
+
+          cd "$TMP/InternalKeyboard-Launchpad-F18-Native-arm64"
+          shasum -a 256 -c SHA256SUMS.txt
+
+          test -x internal-keyboard-keymap
+          test -x 1-INSTALL-INTERNAL.command
+          test -x 2-CHECK-INTERNAL.command
+          test -x 3-UNINSTALL-INTERNAL.command
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: InternalKeyboard-Launchpad-F18-Native-arm64
+          path: InternalKeyboard-Launchpad-F18-Native-arm64.zip
+          retention-days: 30
