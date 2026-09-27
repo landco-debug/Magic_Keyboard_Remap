@@ -18,7 +18,7 @@ jobs:
       - name: Build ARM64 helper
         run: |
           set -euo pipefail
-          mkdir -p dist
+          mkdir -p build
 
           xcrun clang \
             -arch arm64 \
@@ -27,40 +27,77 @@ jobs:
             src/main.c \
             -framework CoreFoundation \
             -framework IOKit \
-            -o dist/magic-keyboard-keymap
+            -o build/magic-keyboard-keymap
 
-          codesign --force --sign - --timestamp=none dist/magic-keyboard-keymap
+          codesign --force --sign - --timestamp=none build/magic-keyboard-keymap
 
       - name: Verify binary
         run: |
           set -euo pipefail
-          file dist/magic-keyboard-keymap | tee dist/BUILD-INFO.txt
-          lipo -archs dist/magic-keyboard-keymap | tee -a dist/BUILD-INFO.txt
-          otool -L dist/magic-keyboard-keymap | tee -a dist/BUILD-INFO.txt
-          codesign -dv --verbose=4 dist/magic-keyboard-keymap 2>&1 | tee -a dist/BUILD-INFO.txt
-          codesign --verify --strict --verbose=2 dist/magic-keyboard-keymap
-
-          test "$(lipo -archs dist/magic-keyboard-keymap)" = "arm64"
+          file build/magic-keyboard-keymap | tee build/BUILD-INFO.txt
+          lipo -archs build/magic-keyboard-keymap | tee -a build/BUILD-INFO.txt
+          otool -L build/magic-keyboard-keymap | tee -a build/BUILD-INFO.txt
+          codesign -dv --verbose=4 build/magic-keyboard-keymap 2>&1 | tee -a build/BUILD-INFO.txt
+          codesign --verify --strict --verbose=2 build/magic-keyboard-keymap
+          test "$(lipo -archs build/magic-keyboard-keymap)" = "arm64"
 
       - name: Validate launchd plist
         run: |
           plutil -lint launchd/com.landco.magic-keyboard-keymap.plist
 
-      - name: Prepare install package
+      - name: Prepare user package
         run: |
           set -euo pipefail
-          cp launchd/com.landco.magic-keyboard-keymap.plist dist/
-          cp install.sh uninstall.sh dist/
-          chmod +x dist/install.sh dist/uninstall.sh
+
+          PKG="MagicKeyboard-Launchpad-Native-arm64"
+          mkdir -p "$PKG"
+
+          cp build/magic-keyboard-keymap "$PKG/"
+          cp launchd/com.landco.magic-keyboard-keymap.plist "$PKG/"
+          cp install.sh uninstall.sh "$PKG/"
+          cp 1-INSTALL.command 2-CHECK.command 3-UNINSTALL.command "$PKG/"
+          cp README_RU.txt "$PKG/"
+          cp build/BUILD-INFO.txt "$PKG/"
+
+          chmod 755 \
+            "$PKG/magic-keyboard-keymap" \
+            "$PKG/install.sh" \
+            "$PKG/uninstall.sh" \
+            "$PKG/1-INSTALL.command" \
+            "$PKG/2-CHECK.command" \
+            "$PKG/3-UNINSTALL.command"
+
           (
-            cd dist
-            shasum -a 256 magic-keyboard-keymap \
+            cd "$PKG"
+            shasum -a 256 \
+              magic-keyboard-keymap \
               com.landco.magic-keyboard-keymap.plist \
-              install.sh uninstall.sh > SHA256SUMS.txt
+              install.sh uninstall.sh \
+              1-INSTALL.command 2-CHECK.command 3-UNINSTALL.command \
+              README_RU.txt BUILD-INFO.txt > SHA256SUMS.txt
           )
+
+          /usr/bin/ditto -c -k --sequesterRsrc --keepParent \
+            "$PKG" \
+            "MagicKeyboard-Launchpad-Native-arm64.zip"
+
+      - name: Verify final ZIP
+        run: |
+          set -euo pipefail
+          TMP="$(mktemp -d)"
+          trap 'rm -rf "$TMP"' EXIT
+          /usr/bin/ditto -x -k MagicKeyboard-Launchpad-Native-arm64.zip "$TMP"
+
+          cd "$TMP/MagicKeyboard-Launchpad-Native-arm64"
+          shasum -a 256 -c SHA256SUMS.txt
+
+          test -x magic-keyboard-keymap
+          test -x 1-INSTALL.command
+          test -x 2-CHECK.command
+          test -x 3-UNINSTALL.command
 
       - uses: actions/upload-artifact@v4
         with:
           name: MagicKeyboard-Launchpad-Native-arm64
-          path: dist/
+          path: MagicKeyboard-Launchpad-Native-arm64.zip
           retention-days: 30
