@@ -2,7 +2,7 @@
 set -u
 
 HERE="${0:A:h}"
-printf '\033]0;Magic Keyboard Remap v2 — INSTALL\007'
+printf '\033]0;Magic Keyboard Remap v2.1 — INSTALL\007'
 clear
 
 finish() {
@@ -12,8 +12,8 @@ finish() {
 }
 trap finish EXIT
 
-echo "Magic Keyboard F4/лупа → Launchpad — v2"
-echo "======================================="
+echo "Magic Keyboard F4/лупа → Launchpad — v2.1"
+echo "========================================="
 echo
 
 cd "$HERE" || exit 1
@@ -37,6 +37,7 @@ fi
 
 echo
 echo "ГОТОВО."
-echo "После reboot mapping восстанавливает login-agent."
-echo "После Bluetooth reconnect mapping восстанавливает IOKit attach-agent."
-echo "Оба процесса одноразовые и не остаются в памяти."
+echo "В Login Items будут два понятных пункта:"
+echo "  Magic Keyboard — Login"
+echo "  Magic Keyboard — Reconnect"
+echo "Это один и тот же бинарник через hard links, а не две копии программы."
