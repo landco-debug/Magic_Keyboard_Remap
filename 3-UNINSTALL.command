@@ -2,7 +2,7 @@
 set -u
 
 HERE="${0:A:h}"
-printf '\033]0;Magic Keyboard Remap — UNINSTALL\007'
+printf '\033]0;Magic Keyboard Remap v2 — UNINSTALL\007'
 clear
 
 finish() {
@@ -15,19 +15,15 @@ trap finish EXIT
 echo "Удаление Magic Keyboard F4/лупа → Launchpad"
 echo "==========================================="
 echo
-echo "Будет удалён только этот remap и его LaunchAgent."
-echo "Другие переназначения клавиатуры не затрагиваются."
+echo "Будут удалены только этот remap и два его LaunchAgent."
+echo "Другие переназначения клавиатуры сохраняются."
 echo
-
 printf "Продолжить? [y/N]: "
 read -r answer
 
 case "$answer" in
     y|Y|yes|YES|Yes) ;;
-    *)
-        echo "Отменено."
-        exit 0
-        ;;
+    *) echo "Отменено."; exit 0 ;;
 esac
 
 if ! /bin/zsh "$HERE/uninstall.sh"; then
@@ -37,4 +33,4 @@ if ! /bin/zsh "$HERE/uninstall.sh"; then
 fi
 
 echo
-echo "ГОТОВО. Remap удалён."
+echo "ГОТОВО."
