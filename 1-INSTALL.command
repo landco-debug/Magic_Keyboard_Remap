@@ -2,7 +2,7 @@
 set -u
 
 HERE="${0:A:h}"
-printf '\033]0;Magic Keyboard Remap — INSTALL\007'
+printf '\033]0;Magic Keyboard Remap v2 — INSTALL\007'
 clear
 
 finish() {
@@ -12,8 +12,8 @@ finish() {
 }
 trap finish EXIT
 
-echo "Magic Keyboard F4/лупа → Launchpad"
-echo "=================================="
+echo "Magic Keyboard F4/лупа → Launchpad — v2"
+echo "======================================="
 echo
 
 cd "$HERE" || exit 1
@@ -22,7 +22,7 @@ if [[ -f SHA256SUMS.txt ]]; then
     echo "Проверяю целостность пакета..."
     if ! /usr/bin/shasum -a 256 -c SHA256SUMS.txt; then
         echo
-        echo "ОШИБКА: проверка SHA-256 не пройдена. Установка отменена."
+        echo "ОШИБКА: SHA-256 не совпадает. Установка отменена."
         exit 1
     fi
     echo
@@ -37,5 +37,6 @@ fi
 
 echo
 echo "ГОТОВО."
-echo "F4 с лупой на внешней Magic Keyboard должна запускать Launchpad."
-echo "При следующем Bluetooth-подключении mapping восстановится автоматически."
+echo "После reboot mapping восстанавливает login-agent."
+echo "После Bluetooth reconnect mapping восстанавливает IOKit attach-agent."
+echo "Оба процесса одноразовые и не остаются в памяти."
