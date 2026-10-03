@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define VERSION "2.0.0"
+#define VERSION "2.1.0"
 
 static const uint64_t kSearchKey = 0xC00000221ULL;
 static const uint64_t kLaunchpadKey = 0xC000002A2ULL;
