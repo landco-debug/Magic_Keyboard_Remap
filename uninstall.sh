@@ -2,17 +2,26 @@
 set -euo pipefail
 
 BIN="$HOME/bin/magic-keyboard-keymap"
-AGENT="$HOME/Library/LaunchAgents/com.landco.magic-keyboard-keymap.plist"
+
+OLD_AGENT="$HOME/Library/LaunchAgents/com.landco.magic-keyboard-keymap.plist"
+ATTACH_AGENT="$HOME/Library/LaunchAgents/com.landco.magic-keyboard-keymap.attach.plist"
+LOGIN_AGENT="$HOME/Library/LaunchAgents/com.landco.magic-keyboard-keymap.login.plist"
+
 DOMAIN="gui/$(id -u)"
-LABEL="com.landco.magic-keyboard-keymap"
 
-/bin/launchctl bootout "$DOMAIN/$LABEL" 2>/dev/null || true
+for LABEL in     com.landco.magic-keyboard-keymap     com.landco.magic-keyboard-keymap.attach     com.landco.magic-keyboard-keymap.login
+do
+    /bin/launchctl bootout "$DOMAIN/$LABEL" 2>/dev/null || true
+done
 
-# Remove only our Search/F4 mapping and preserve any unrelated UserKeyMapping entries.
 if [[ -x "$BIN" ]]; then
     "$BIN" --remove-now 2>/dev/null || true
 fi
 
-/bin/rm -f "$AGENT" "$BIN"
+/bin/rm -f "$OLD_AGENT" "$ATTACH_AGENT" "$LOGIN_AGENT" "$BIN"
 
-echo "Удалено. Другие remap-записи Magic Keyboard не изменялись."
+echo "Удалено:"
+echo "  magic-keyboard-keymap"
+echo "  login-agent"
+echo "  attach-agent"
+echo "Управляемый F4-remap снят; посторонние remap-записи не изменялись."
