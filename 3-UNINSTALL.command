@@ -2,7 +2,7 @@
 set -u
 
 HERE="${0:A:h}"
-printf '\033]0;Magic Keyboard Remap v2 — UNINSTALL\007'
+printf '\033]0;Magic Keyboard Remap v2.1 — UNINSTALL\007'
 clear
 
 finish() {
