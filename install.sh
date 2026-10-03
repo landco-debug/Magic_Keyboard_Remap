@@ -5,6 +5,8 @@ HERE="${0:A:h}"
 
 BIN_SRC="$HERE/magic-keyboard-keymap"
 BIN_DST="$HOME/bin/magic-keyboard-keymap"
+LOGIN_BIN="$HOME/bin/Magic Keyboard — Login"
+RECONNECT_BIN="$HOME/bin/Magic Keyboard — Reconnect"
 
 ATTACH_SRC="$HERE/com.landco.magic-keyboard-keymap.attach.plist"
 ATTACH_DST="$HOME/Library/LaunchAgents/com.landco.magic-keyboard-keymap.attach.plist"
@@ -33,11 +35,16 @@ mkdir -p "$HOME/bin" "$HOME/Library/LaunchAgents"
 /bin/launchctl bootout "$DOMAIN/$ATTACH_LABEL" 2>/dev/null || true
 /bin/launchctl bootout "$DOMAIN/$LOGIN_LABEL" 2>/dev/null || true
 
-/bin/rm -f "$OLD_AGENT"
+/bin/rm -f "$OLD_AGENT" "$LOGIN_BIN" "$RECONNECT_BIN"
 
 /bin/cp -f "$BIN_SRC" "$BIN_DST"
 /bin/chmod 755 "$BIN_DST"
 /usr/bin/xattr -d com.apple.quarantine "$BIN_DST" 2>/dev/null || true
+
+# Two hard links to the same binary. They use no extra binary copy, but give
+# macOS distinct executable names for Login Items & Extensions.
+/bin/ln "$BIN_DST" "$LOGIN_BIN"
+/bin/ln "$BIN_DST" "$RECONNECT_BIN"
 
 /bin/cp -f "$ATTACH_SRC" "$ATTACH_DST"
 /bin/cp -f "$LOGIN_SRC" "$LOGIN_DST"
@@ -58,7 +65,8 @@ else
 fi
 
 echo
-echo "Установлена архитектура v2:"
-echo "  login-agent  -> один запуск при входе в Aqua-сессию"
-echo "  attach-agent -> IOKit LaunchEvents при появлении Magic Keyboard"
+echo "Установлена архитектура v2.1:"
+echo "  Magic Keyboard — Login      -> один запуск при входе в Aqua-сессию"
+echo "  Magic Keyboard — Reconnect  -> IOKit LaunchEvents при подключении"
+echo "  Оба имени ведут на один и тот же бинарник через hard link"
 echo "  KeepAlive / StartInterval / polling отсутствуют"
