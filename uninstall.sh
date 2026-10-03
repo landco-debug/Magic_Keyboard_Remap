@@ -2,6 +2,8 @@
 set -euo pipefail
 
 BIN="$HOME/bin/magic-keyboard-keymap"
+LOGIN_BIN="$HOME/bin/Magic Keyboard — Login"
+RECONNECT_BIN="$HOME/bin/Magic Keyboard — Reconnect"
 
 OLD_AGENT="$HOME/Library/LaunchAgents/com.landco.magic-keyboard-keymap.plist"
 ATTACH_AGENT="$HOME/Library/LaunchAgents/com.landco.magic-keyboard-keymap.attach.plist"
@@ -18,10 +20,11 @@ if [[ -x "$BIN" ]]; then
     "$BIN" --remove-now 2>/dev/null || true
 fi
 
-/bin/rm -f "$OLD_AGENT" "$ATTACH_AGENT" "$LOGIN_AGENT" "$BIN"
+/bin/rm -f     "$OLD_AGENT"     "$ATTACH_AGENT"     "$LOGIN_AGENT"     "$LOGIN_BIN"     "$RECONNECT_BIN"     "$BIN"
 
 echo "Удалено:"
 echo "  magic-keyboard-keymap"
-echo "  login-agent"
-echo "  attach-agent"
+echo "  Magic Keyboard — Login"
+echo "  Magic Keyboard — Reconnect"
+echo "  оба LaunchAgent"
 echo "Управляемый F4-remap снят; посторонние remap-записи не изменялись."
