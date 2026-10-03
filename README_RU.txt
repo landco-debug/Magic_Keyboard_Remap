@@ -1,4 +1,4 @@
-MAGIC KEYBOARD — F4/ЛУПА → LAUNCHPAD — v2
+MAGIC KEYBOARD — F4/ЛУПА → LAUNCHPAD — v2.1
 
 Для установки:
   1. Распакуйте ZIP.
@@ -11,20 +11,32 @@ MAGIC KEYBOARD — F4/ЛУПА → LAUNCHPAD — v2
 Для полного удаления:
   Дважды щёлкните 3-UNINSTALL.command.
 
+ЧТО ВИДНО В «ОБЪЕКТЫ ВХОДА И РАСШИРЕНИЯ»
+  Magic Keyboard — Login
+  Magic Keyboard — Reconnect
+
+Это НЕ две копии программы.
+Оба имени — hard links одного и того же бинарника:
+  ~/bin/magic-keyboard-keymap
+
+Они имеют один inode и не занимают дважды место на диске.
+
 ПОСТОЯННЫЕ ФАЙЛЫ
   ~/bin/magic-keyboard-keymap
+  ~/bin/Magic Keyboard — Login
+  ~/bin/Magic Keyboard — Reconnect
   ~/Library/LaunchAgents/com.landco.magic-keyboard-keymap.login.plist
   ~/Library/LaunchAgents/com.landco.magic-keyboard-keymap.attach.plist
 
 АРХИТЕКТУРА
-  1. login-agent:
+  1. Magic Keyboard — Login
      RunAtLoad один раз при входе в Aqua-сессию.
-     Вызывает magic-keyboard-keymap --apply-if-present и завершается.
+     Вызывает helper с --apply-if-present и завершается.
 
-  2. attach-agent:
+  2. Magic Keyboard — Reconnect
      launchd LaunchEvents -> com.apple.iokit.matching.
      Срабатывает при появлении целевой Magic Keyboard.
-     Helper принимает XPC event, применяет mapping, проверяет его read-back и завершается.
+     Helper принимает XPC event, применяет mapping, проверяет read-back и завершается.
 
   Нет KeepAlive.
   Нет StartInterval.
@@ -52,14 +64,8 @@ MAPPING
   - перед записью повторно проверяется точная идентичность клавиатуры;
   - сохраняются все посторонние UserKeyMapping;
   - изменяется только mapping с source Search/F4;
-  - после записи mapping немедленно читается обратно; ложный success не принимается;
+  - после записи mapping немедленно читается обратно;
   - при uninstall снимается только управляемый F4 mapping.
-
-ЗАМЕЧАНИЕ
-  UserKeyMapping в macOS является временным свойством активного HID service.
-  Поэтому v2 закрывает два независимых lifecycle-события:
-  - login/reboot -> login-agent;
-  - создание/пересоздание Bluetooth HID service -> attach-agent.
 
 Если Gatekeeper блокирует первый запуск .command:
   Finder -> Control-клик -> Открыть -> Открыть.
